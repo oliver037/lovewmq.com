@@ -147,7 +147,7 @@
   // 窗口系统
   // ============================================================
   const APPS = {
-    about:   { title: "关于我.txt", render: renderAbout },
+    about:   { title: "我是谁.txt", render: renderAbout, w: 560 },
     works:   { title: "作品集/", render: renderWorks },
     hobbies: { title: "爱好相册/", render: renderHobbies, w: 600 },
     notes:   { title: "碎碎念.log", render: renderNotes },
@@ -157,11 +157,18 @@
   const wins = new Map();
   let zTop = 10, cascade = 0;
 
-  function openApp(id) {
+  function openApp(id, tab) {
     const app = APPS[id];
     if (!app) return;
     closeMenus();
-    if (wins.has(id)) { const w = wins.get(id); w.el.classList.remove("is-min"); focusWin(id); return; }
+    if (wins.has(id)) {
+      const w = wins.get(id);
+      w.el.classList.remove("is-min");
+      const body = $(".win__body", w.el);
+      if (tab != null && body.showTab) body.showTab(tab);
+      focusWin(id);
+      return;
+    }
 
     const el = document.createElement("section");
     el.className = "win";
@@ -195,7 +202,7 @@
 
     const state = { el, task, cleanup: null };
     wins.set(id, state);
-    state.cleanup = app.render($(".win__body", el)) || null;
+    state.cleanup = app.render($(".win__body", el), tab ?? 0) || null;
 
     el.addEventListener("pointerdown", () => focusWin(id));
     $("[data-act=close]", el).addEventListener("click", () => closeWin(id));
@@ -231,18 +238,67 @@
   }
 
   // ---------- 各个应用 ----------
-  function renderAbout(body) {
+  // 「我是谁.txt」：简介 / 进行中 / 技能
+  function renderAbout(body, tab = 0) {
     const a = S.about;
+    const STATUS = { "进行中": "run", "规划中": "plan", "已上线": "done" };
+    const pages = [
+      {
+        name: "简介",
+        html: `
+          <div class="about">
+            <div class="about__avatar" aria-hidden="true">${esc(a.avatar)}</div>
+            <div>
+              <p class="about__name">${esc(a.name || S.name)}</p>
+              <p class="about__role">${esc(a.role || "")}</p>
+              ${a.lines.map((l) => `<p>${esc(l)}</p>`).join("")}
+            </div>
+          </div>
+          <dl class="stats">${a.stats.map((s) => `<div><dt>${esc(s.k)}</dt><dd>${esc(s.v)}</dd></div>`).join("")}</dl>
+          <ul class="contact about__links">${(a.links || []).map((c) => `
+            <li><span>${esc(c.label)}</span><a href="${esc(c.href)}" target="_blank" rel="noopener">${esc(c.value)}</a></li>`).join("")}
+          </ul>
+          <button class="btn" data-open="hobbies">看看我的爱好 →</button>`,
+      },
+      {
+        name: "进行中",
+        html: `
+          ${a.now?.length ? `<h3 class="sec">// 最近在忙</h3><ul class="now">${a.now.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+          <h3 class="sec">// 项目</h3>
+          <div class="projects">${(a.projects || []).map((p) => {
+            const pct = Math.max(0, Math.min(100, +p.progress || 0));
+            return `
+            <article class="proj proj--${STATUS[p.status] || "run"}">
+              <header><h4>${esc(p.name)}</h4><span class="proj__st">${esc(p.status)}</span></header>
+              <p>${esc(p.desc)}</p>
+              <div class="proj__bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(p.name)} 进度">
+                <span style="width:${pct}%"></span>
+              </div>
+              <footer>${(p.tags || []).map((t) => `<span class="tag">#${esc(t)}</span>`).join(" ")}<b>${pct}%</b></footer>
+            </article>`;
+          }).join("")}</div>`,
+      },
+      {
+        name: "技能",
+        html: (a.skills || []).map((g) => `
+          <h3 class="sec">// ${esc(g.group)}</h3>
+          <ul class="skills">${g.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`).join(""),
+      },
+    ];
     body.innerHTML = `
-      <div class="about">
-        <div class="about__avatar" aria-hidden="true">${esc(a.avatar)}</div>
-        <div>${a.lines.map((l) => `<p>${esc(l)}</p>`).join("")}</div>
+      <div class="tabs" role="tablist">${pages.map((p, i) => `
+        <button class="tab" role="tab" data-t="${i}">${esc(p.name)}</button>`).join("")}
       </div>
-      <dl class="stats">${a.stats.map((s) => `<div><dt>${esc(s.k)}</dt><dd>${esc(s.v)}</dd></div>`).join("")}</dl>
-      <ul class="contact about__links">${(a.links || []).map((c) => `
-        <li><span>${esc(c.label)}</span><a href="${esc(c.href)}" target="_blank" rel="noopener">${esc(c.value)}</a></li>`).join("")}
-      </ul>
-      <button class="btn" data-open="hobbies">看看我的爱好 →</button>`;
+      <div class="tabpage" role="tabpanel"></div>`;
+    const page = $(".tabpage", body);
+    const show = (i) => {
+      $$(".tab", body).forEach((b, j) => { b.classList.toggle("is-on", i === j); b.setAttribute("aria-selected", String(i === j)); });
+      page.innerHTML = pages[i].html;
+      body.scrollTop = 0;
+    };
+    body.addEventListener("click", (e) => { const t = e.target.closest(".tab[data-t]"); if (t) show(+t.dataset.t); });
+    body.showTab = show;
+    show(tab);
   }
 
   // ---------- 爱好相册 ----------
@@ -453,7 +509,7 @@
     if (!b) return;
     const q = S.owl.qa[b.dataset.qa];
     owlSay(q.a);
-    if (q.open) setTimeout(() => openApp(q.open), 500);
+    if (q.open) setTimeout(() => openApp(q.open, q.tab), 500);
   });
   $("#owlClose").addEventListener("click", () => { owl.hidden = true; toast("想我了就双击月亮"); });
 

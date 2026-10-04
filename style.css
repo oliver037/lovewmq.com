@@ -134,6 +134,33 @@ a { color: var(--gold); }
 .stats dd { color: var(--gold); }
 
 .about__links { margin-top: 12px; }
+.about__name { color: var(--paper); font-size: 18px; }
+.about__role { color: var(--gold); font-size: 13px; margin-bottom: 10px !important; }
+.tabpage { margin-top: 14px; }
+.sec { color: var(--blue-hi); font-size: 13px; font-weight: normal; margin: 4px 0 8px; }
+.sec:not(:first-child) { margin-top: 16px; }
+
+.now li { list-style: none; padding-left: 16px; position: relative; margin-bottom: 4px; }
+.now li::before { content: "▸"; position: absolute; left: 0; color: var(--gold); }
+
+.projects { display: grid; gap: 10px; }
+.proj { border: 2px solid var(--line); background: var(--night-1); padding: 10px 12px; }
+.proj header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.proj h4 { font-weight: normal; color: var(--paper); font-size: 15px; }
+.proj p { color: var(--ink-soft); font-size: 13px; margin: 4px 0 8px; }
+.proj__st { font-size: 11px; padding: 0 6px; border: 2px solid currentColor; white-space: nowrap; }
+.proj--run  .proj__st { color: var(--gold); }
+.proj--plan .proj__st { color: var(--blue-hi); }
+.proj--done .proj__st { color: #7fd99a; }
+.proj__bar { height: 10px; border: 2px solid var(--line-hi); padding: 1px; }
+.proj__bar span { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--gold) 0 6px, transparent 6px 8px); }
+.proj--plan .proj__bar span { background: repeating-linear-gradient(90deg, var(--blue-hi) 0 6px, transparent 6px 8px); }
+.proj--done .proj__bar span { background: repeating-linear-gradient(90deg, #7fd99a 0 6px, transparent 6px 8px); }
+.proj footer { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.proj footer b { margin-left: auto; font-weight: normal; font-size: 12px; color: var(--ink-soft); }
+
+.skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skills li { list-style: none; border: 2px solid var(--line-hi); padding: 0 8px; font-size: 13px; }
 
 /* 爱好相册 */
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
