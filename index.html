@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OLIVER-OS · Oliver 的像素桌面</title>
+<meta name="description" content="Oliver 的个人网站：一台叫 OLIVER-OS 的像素电脑，一只猫头鹰当向导。作品、碎碎念和联系方式都在里面。">
+<meta name="theme-color" content="#030d22">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1 class="sr-only">Oliver —— OLIVER-OS 像素桌面</h1>
+
+<!-- 夜空背景 -->
+<canvas id="sky" class="sky" aria-hidden="true"></canvas>
+
+<!-- 开机画面 -->
+<div id="boot" class="boot" role="status" aria-live="polite">
+  <div class="boot__inner">
+    <canvas id="bootMoon" class="boot__moon" width="96" height="96" aria-hidden="true"></canvas>
+    <div class="boot__name">OLIVER-OS</div>
+    <div class="boot__ver">1.0 · 夜航版</div>
+    <div class="boot__bar"><span></span></div>
+    <ol class="boot__log" id="bootLog"></ol>
+    <p class="boot__skip">点击或按任意键跳过</p>
+  </div>
+</div>
+
+<!-- 桌面 -->
+<main id="desktop" class="desktop" aria-label="桌面">
+  <!-- 月亮 + 猫头鹰 -->
+  <button class="moon" id="moon" aria-label="月亮：双击召唤猫头鹰助手">
+    <canvas id="moonCanvas" width="160" height="160" aria-hidden="true"></canvas>
+  </button>
+
+  <div class="hero">
+    <p class="hero__hi">晚上好，旅人。</p>
+    <h2 class="hero__title">OLIVER<span>.</span>STUDIO</h2>
+    <p class="hero__sub">做产品 · 写代码 · 偶尔画像素</p>
+  </div>
+
+  <!-- 桌面图标 -->
+  <nav class="icons" aria-label="桌面图标">
+    <button class="icon" data-open="about"><i class="ico ico--user"></i><span>关于我</span></button>
+    <button class="icon" data-open="works"><i class="ico ico--folder"></i><span>作品集</span></button>
+    <button class="icon" data-open="notes"><i class="ico ico--note"></i><span>碎碎念</span></button>
+    <button class="icon" data-open="game"><i class="ico ico--game"></i><span>小游戏</span></button>
+    <button class="icon" data-open="contact"><i class="ico ico--mail"></i><span>联系我</span></button>
+  </nav>
+
+  <div id="windows"></div>
+
+  <!-- 猫头鹰助手 -->
+  <aside class="owl" id="owl" aria-live="polite" hidden>
+    <canvas id="owlCanvas" width="48" height="48" aria-hidden="true"></canvas>
+    <div class="owl__bubble">
+      <p id="owlText"></p>
+      <div class="owl__chips" id="owlChips"></div>
+      <button class="owl__close" id="owlClose" aria-label="关闭助手">×</button>
+    </div>
+  </aside>
+</main>
+
+<!-- 任务栏 -->
+<footer class="taskbar">
+  <button class="start" id="startBtn" aria-haspopup="true" aria-expanded="false">◐ 开始</button>
+  <div class="tasks" id="tasks"></div>
+  <div class="tray">
+    <button class="tray__btn" id="cmdBtn" title="快速打开 (Ctrl/⌘ + K)">⌘K</button>
+    <time id="clock">--:--</time>
+  </div>
+  <div class="startmenu" id="startMenu" hidden>
+    <button data-open="about">关于我</button>
+    <button data-open="works">作品集</button>
+    <button data-open="notes">碎碎念</button>
+    <button data-open="game">小游戏</button>
+    <button data-open="contact">联系我</button>
+    <hr>
+    <button data-action="owl">召唤猫头鹰</button>
+    <button data-action="reboot">重新开机</button>
+  </div>
+</footer>
+
+<!-- 命令面板 -->
+<div class="palette" id="palette" hidden>
+  <div class="palette__box" role="dialog" aria-label="快速打开">
+    <input id="paletteInput" type="text" placeholder="想去哪里？输入「作品」「联系」…" autocomplete="off" aria-label="搜索">
+    <ul id="paletteList" role="listbox"></ul>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<noscript><div class="noscript">OLIVER-OS 需要 JavaScript 才能开机。</div></noscript>
+<script src="content.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
