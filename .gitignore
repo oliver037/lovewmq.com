@@ -2,3 +2,4 @@
 fonts/
 # 原图只留在本地，不上传
 photos/raw/
+__pycache__/
