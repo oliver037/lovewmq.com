@@ -149,6 +149,7 @@
   const APPS = {
     about:   { title: "关于我.txt", render: renderAbout },
     works:   { title: "作品集/", render: renderWorks },
+    hobbies: { title: "爱好相册/", render: renderHobbies, w: 600 },
     notes:   { title: "碎碎念.log", render: renderNotes },
     game:    { title: "躲方块.exe", render: renderGame, w: 480 },
     contact: { title: "联系我.vcf", render: renderContact },
@@ -237,7 +238,82 @@
         <div class="about__avatar" aria-hidden="true">${esc(a.avatar)}</div>
         <div>${a.lines.map((l) => `<p>${esc(l)}</p>`).join("")}</div>
       </div>
-      <dl class="stats">${a.stats.map((s) => `<div><dt>${esc(s.k)}</dt><dd>${esc(s.v)}</dd></div>`).join("")}</dl>`;
+      <dl class="stats">${a.stats.map((s) => `<div><dt>${esc(s.k)}</dt><dd>${esc(s.v)}</dd></div>`).join("")}</dl>
+      <ul class="contact about__links">${(a.links || []).map((c) => `
+        <li><span>${esc(c.label)}</span><a href="${esc(c.href)}" target="_blank" rel="noopener">${esc(c.value)}</a></li>`).join("")}
+      </ul>
+      <button class="btn" data-open="hobbies">看看我的爱好 →</button>`;
+  }
+
+  // ---------- 爱好相册 ----------
+  function renderHobbies(body) {
+    const H = S.hobbies;
+    body.innerHTML = `
+      <div class="tabs" role="tablist">${H.map((h, i) => `
+        <button class="tab${i ? "" : " is-on"}" role="tab" aria-selected="${!i}" data-h="${i}">
+          <span aria-hidden="true">${esc(h.icon)}</span>${esc(h.name)}<small>${h.photos.length}</small>
+        </button>`).join("")}
+      </div>
+      <p class="album__desc"></p>
+      <div class="album"></div>`;
+    const grid = $(".album", body), desc = $(".album__desc", body);
+    let cur = 0;
+    const draw = (i) => {
+      cur = i;
+      const h = H[i];
+      desc.textContent = h.desc;
+      grid.innerHTML = h.photos.length
+        ? h.photos.map((p, j) => `
+            <button class="photo" data-p="${j}" aria-label="查看大图：${esc(p.caption || h.name)}">
+              <img src="${esc(p.src)}" alt="${esc(p.caption || h.name)}" loading="lazy">
+              ${p.caption ? `<span>${esc(p.caption)}</span>` : ""}
+            </button>`).join("")
+        : Array.from({ length: 3 }, () => `<div class="photo photo--empty"><b aria-hidden="true">${esc(h.icon)}</b><span>照片冲洗中…</span></div>`).join("");
+    };
+    body.addEventListener("click", (e) => {
+      const t = e.target.closest(".tab");
+      if (t) {
+        $$(".tab", body).forEach((b) => { const on = b === t; b.classList.toggle("is-on", on); b.setAttribute("aria-selected", String(on)); });
+        draw(+t.dataset.h);
+      }
+      const p = e.target.closest(".photo[data-p]");
+      if (p) openLightbox(H[cur].photos, +p.dataset.p);
+    });
+    draw(0);
+  }
+
+  // 大图查看
+  function openLightbox(list, idx) {
+    const lb = document.createElement("div");
+    lb.className = "lightbox";
+    lb.setAttribute("role", "dialog");
+    lb.setAttribute("aria-label", "照片");
+    lb.innerHTML = `
+      <figure><img alt=""><figcaption></figcaption></figure>
+      <button class="lb__btn lb__prev" aria-label="上一张">‹</button>
+      <button class="lb__btn lb__next" aria-label="下一张">›</button>
+      <button class="lb__btn lb__close" aria-label="关闭">×</button>`;
+    document.body.append(lb);
+    const img = $("img", lb), cap = $("figcaption", lb);
+    const show = (i) => {
+      idx = (i + list.length) % list.length;
+      img.src = list[idx].src; img.alt = list[idx].caption || "";
+      cap.textContent = `${list[idx].caption || ""}  ${idx + 1} / ${list.length}`;
+    };
+    const close = () => { lb.remove(); removeEventListener("keydown", key, true); };
+    const key = (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); close(); }
+      if (e.key === "ArrowLeft") show(idx - 1);
+      if (e.key === "ArrowRight") show(idx + 1);
+    };
+    lb.addEventListener("click", (e) => {
+      if (e.target.closest(".lb__prev")) show(idx - 1);
+      else if (e.target.closest(".lb__next")) show(idx + 1);
+      else if (e.target === lb || e.target.closest(".lb__close")) close();
+    });
+    addEventListener("keydown", key, true);
+    show(idx);
+    $(".lb__close", lb).focus();
   }
 
   function renderWorks(body) {
