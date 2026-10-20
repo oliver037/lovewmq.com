@@ -229,7 +229,13 @@ a { color: var(--gold); }
 .shop__time.is-warn i { background: #ff8a7a; }
 .shop__stage { position: relative; }
 .shop canvas { display: block; width: 100%; aspect-ratio: 320 / 224; border: 2px solid var(--line); image-rendering: pixelated; touch-action: manipulation; }
-.shop__tip { font-size: 12px; color: var(--ink-soft); margin-top: 6px; text-align: center; }
+.shop__clock { font-family: var(--px-en); font-size: 11px; color: var(--ink-soft); min-width: 40px; text-align: center; }
+.shop__bar { display: flex; align-items: center; gap: 6px; margin-top: 6px; min-height: 26px; }
+.shop__bar .btn { height: 24px; }
+.shop__tip { flex: 1; min-width: 0; font-size: 12px; color: var(--ink-soft); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shop__logo { display: block; width: min(220px, 70%); margin: 6px auto 4px; }
+.shop__tag { font-family: var(--px-en); font-size: 10px; letter-spacing: 3px; color: var(--ink-soft); margin-bottom: 10px; }
+.shop__stats--team { grid-template-columns: 1fr; }
 .shop__tip.is-warn { color: #ff8a7a; }
 .shop__modal { position: absolute; inset: 0; background: #020a1cd9; display: grid; place-items: center; padding: 10px; }
 .shop__modal[hidden] { display: none; }
