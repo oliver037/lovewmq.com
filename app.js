@@ -152,6 +152,7 @@
     hobbies: { title: "爱好相册/", render: renderHobbies, w: 600 },
     notes:   { title: "碎碎念.log", render: renderNotes },
     game:    { title: "躲方块.exe", render: renderGame, w: 480 },
+    shop:    { title: "像素门店.exe", render: (b) => window.renderShop(b), w: 700 },
     contact: { title: "联系我.vcf", render: renderContact },
   };
   const wins = new Map();
