@@ -10,32 +10,33 @@ window.renderShop = function (body) {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-  // 品类：真实商品（零售价）、客流权重、接待时长（秒）。进价按均价 24% 估算，仅作游戏数值
-  const SKU = {
-    bomb: { name: "沐浴球", color: "#e8638c", demand: 6, svc: 4, items: [
-      ["野生薰衣草足浴气泡弹", 38], ["木兰花香氛气泡弹", 70], ["梦想星球气泡弹", 70], ["蓝莓香氛精油球", 70],
-      ["苔藓秘境气泡弹", 98], ["冬日暖阳气泡弹", 98], ["牛油果奶油球", 98], ["北国之春气泡弹", 98],
-      ["风之恋气泡弹", 98], ["优雅天秤座精油球", 125]] },
-    soap: { name: "手工皂", color: "#7fd99a", demand: 4, svc: 4, items: [
-      ["蔓越莓香氛皂", 25], ["块状葡萄柚温柏皂", 80], ["红色冰玫瑰皂", 80], ["芒果百香果彩泥皂", 80],
-      ["玫瑰奶油块状皂", 85], ["燕麦玫瑰奶油块状皂", 85], ["金色雪花皂", 98], ["苹果大黄塔啫喱皂", 98],
-      ["草莓覆盆子啫喱皂", 98], ["蓝莓泡泡啫喱皂", 98]] },
-    body: { name: "身体护理", color: "#e8b64c", demand: 5, svc: 6, items: [
-      ["苹果精粹沐浴露", 160], ["欧薄荷液体皂", 198], ["苹果精粹身体乳", 210], ["柑橘薄荷醒肤沐浴啫喱", 210],
-      ["手工果油乳霜", 240], ["蔓越莓温和磨砂膏", 240], ["葡萄柚绵肌沐浴膏", 245], ["欧薄荷磨砂盐", 260],
-      ["姜黄焕彩身体莹润霜", 265], ["蔓越莓水分乳", 278], ["玫瑰身体油霜", 315], ["甜杏润体乳", 330]] },
-    scent: { name: "香氛", color: "#b49cf0", demand: 3, svc: 6, items: [
-      ["绿色按摩蜡", 175], ["香薰包·花瀑暗语", 180], ["香薰包·春之悸动", 180], ["印象香草家居扩香", 295],
-      ["智利往事家居扩香", 295], ["浮光掠影家居扩香", 295], ["橙花伊甸园家居扩香", 295], ["醉情地中海香薰蜡烛", 350]] },
-    gift: { name: "礼盒", color: "#8cc2ff", demand: 2, svc: 8, items: [
-      ["固定4球礼盒", 280], ["沁爽慕斯礼盒", 300], ["迷你香薰蜡烛套装", 395], ["北国秘境奇浴记", 425],
-      ["北欧茉莉木屋礼盒", 575], ["花香木屋礼盒", 588], ["身体护理木屋礼盒", 593], ["沐浴木屋礼盒", 643]] },
-  };
-  const CATS = Object.entries(SKU).map(([id, d]) => {
-    const items = d.items.map(([name, price]) => ({ name, price }));
-    const ps = items.map((i) => i.price), avg = ps.reduce((a, b) => a + b, 0) / ps.length;
-    return { id, ...d, items, price: [Math.min(...ps), Math.max(...ps)], cost: Math.round(avg * 0.24) };
+  // 品类与商品：24 CARAT GOLD 系列真实产品
+  // 售价为游戏内零售价；进价按均价 24% 估算，仅作游戏数值
+  const PRODUCTS = [
+    { id: "bomb", name: "沐浴球", color: "#e8638c", demand: 6, svc: 4, items: [
+      { name: "24K 金箔气泡弹", price: 98, img: "assets/products/bath-bomb.png" }] },
+    { id: "bath", name: "浴盐", color: "#e8b64c", demand: 4, svc: 4, items: [
+      { name: "24K 石榴浴盐", price: 168, img: "assets/products/bath-salt.png" }] },
+    { id: "soap", name: "精油皂", color: "#7fd99a", demand: 4, svc: 4, items: [
+      { name: "24K 金箔精油皂", price: 128, img: "assets/products/soap.png" }] },
+    { id: "care", name: "身体护理", color: "#d9a24a", demand: 6, svc: 6, items: [
+      { name: "24K 护手霜", price: 118, img: "assets/products/hand-cream.png" },
+      { name: "24K 洗手液", price: 138, img: "assets/products/hand-wash.png" },
+      { name: "24K 身体乳", price: 228, img: "assets/products/body-cream.png" },
+      { name: "24K 身体磨砂膏", price: 248, img: "assets/products/body-scrub.png" }] },
+    { id: "face", name: "面部护理", color: "#b49cf0", demand: 3, svc: 6, items: [
+      { name: "24K 爽肤水", price: 198, img: "assets/products/face-toner.png" }] },
+  ];
+  const CATS = PRODUCTS.map((c) => {
+    const ps = c.items.map((i) => i.price);
+    return { ...c, price: [Math.min(...ps), Math.max(...ps)],
+      cost: Math.round((ps.reduce((a, b) => a + b, 0) / ps.length) * 0.24) };
   });
+  const IMG = {};
+  CATS.forEach((c) => c.items.forEach((it) => {
+    if (IMG[it.img]) return;
+    const im = new Image(); im.src = it.img; IMG[it.img] = im;
+  }));
   const WEIGHTED = CATS.flatMap((c) => Array(c.demand).fill(c));
   const UPS = [
     { id: "train", name: "BA 培训",  desc: "成交率 +6%",              costs: [600, 1000, 1600] },
@@ -77,6 +78,7 @@ window.renderShop = function (body) {
       <div class="shop__bar">
         <p class="shop__tip"></p>
         <button class="btn btn--sm btn--ghost" data-act="close" hidden>打烊</button>
+        <button class="btn btn--sm btn--ghost" data-act="fps" title="以顾客的第一人称逛店">👤 顾客视角</button>
         <button class="btn btn--sm btn--ghost" data-act="mute" aria-label="音效开关"></button>
       </div>
     </div>`;
@@ -183,7 +185,7 @@ window.renderShop = function (body) {
     const rows = CATS.map((c) => {
       const room = cap() - G.stock[c.id], q = G.order[c.id];
       return `<div class="shop__row">
-        <i style="background:${c.color}${c.id === "bomb" ? ";border-radius:50%" : ""}"></i>
+        <i class="shop__thumb"><img src="${c.items[0].img}" alt=""></i>
         <div><b>${c.name}</b><small>进价 ¥${c.cost} · 售价 ¥${c.price[0]}–${c.price[1]} · ${c.items.length} 款 · 库存 ${G.stock[c.id]}/${cap()}</small></div>
         <div class="shop__step">
           <button data-dec="${c.id}" ${q <= 0 ? "disabled" : ""} aria-label="${c.name}少订一件">−</button>
@@ -304,6 +306,57 @@ window.renderShop = function (body) {
     muted = !muted; localStorage.setItem(MUTE, muted ? "1" : "0"); setMuteLabel();
     initAudio(); SFX.tap();
   });
+
+  // ---------- 顾客视角（第一人称） ----------
+  let fps = null;
+  const fpsBtn = body.querySelector('[data-act="fps"]');
+  const stage = body.querySelector(".shop__stage");
+  const fpsHost = document.createElement("div");
+  fpsHost.className = "shop__fps";
+  fpsHost.hidden = true;
+  stage.appendChild(fpsHost);
+  function enterFPS() {
+    if (fps) return;
+    initAudio(); SFX.tap();
+    // 营业中进来，这一单算营业额；否则只在店里逛
+    const counted = G.phase === "open" || G.phase === "closing";
+    cv.style.visibility = "hidden";
+    fpsHost.hidden = false;
+    fpsBtn.hidden = true;
+    hide();
+    fps = window.ShopFPS.mount(fpsHost, {
+      catalog: CATS.map((c) => ({ id: c.id, name: c.name, color: c.color,
+        items: c.items.map((it) => ({ name: it.name, price: it.price, img: it.img })) })),
+      stockOf: (id) => G.stock[id],
+      counted,
+      onSell: (id, item) => {
+        if (G.stock[id] <= 0) return false;
+        G.stock[id]--;
+        G.rep = clamp(G.rep + 0.8, 0, 100);
+        if (counted && G.st) { G.st.rev += item.price; G.st.deals++; G.st.cogs += CATS.find((c) => c.id === id).cost; }
+        G.money += item.price;
+        SFX.cash();
+        return true;
+      },
+      onExit: leaveFPS,
+    });
+  }
+  function leaveFPS() {
+    if (!fps) return;
+    fps.destroy(); fps = null;
+    fpsHost.hidden = true; fpsHost.innerHTML = "";
+    cv.style.visibility = "";
+    fpsBtn.hidden = false;
+    const counted = G.phase === "open" || G.phase === "closing";
+    if (counted) G.paused = false;
+    // 回到店长模式时把状态同步回当前阶段
+    if (G.phase === "title") showTitle();
+    else if (G.phase === "prep") renderPrep();
+    else if (G.phase === "settle") renderSettle(G.lastSettle);
+    else if (G.phase === "over") gameOver();
+    else { tipEl.textContent = G.phase === "open" ? TIP : "打烊中 · 送走最后几位顾客"; }
+  }
+  fpsBtn.addEventListener("click", enterFPS);
 
   // ---------- 顾客与 BA ----------
   const OUTFITS = ["#d96c5f", "#5f8fc0", "#7fa98a", "#c89b5e", "#a87fa8", "#5fa8a0", "#c97b8e"];
@@ -529,12 +582,24 @@ window.renderShop = function (body) {
       px(sh.x - 1, sh.y - 1, sh.w + 2, sh.h + 2, hot ? "#e8b64c" : "#2c5a94");
       px(sh.x, sh.y, sh.w, sh.h, "#08214a");
       px(sh.x, sh.y + 10, sh.w, 1, "#1d3d68");
-      for (let i = 0; i < cap(); i++) {
-        const col = i % 8, row = (i / 8) | 0;
-        px(sh.x + 3 + col * 6.5, sh.y + 3 + row * 10, 5, 5, i < n ? c.color : "#0d2a55");
+      // 每件商品画成真实产品图；缺货时是暗格
+      const slots = Math.min(cap(), 8);
+      for (let i = 0; i < slots; i++) {
+        const col = i % 8;
+        const x = sh.x + 2 + col * 6.6, y = sh.y + 2;
+        if (i < n) {
+          const it = c.items[i % c.items.length], im = IMG[it.img];
+          if (im && im.complete && im.naturalWidth) {
+            g.imageSmoothingEnabled = true;
+            g.drawImage(im, Math.round(x), Math.round(y), 6, 8);
+            g.imageSmoothingEnabled = false;
+          } else px(x, y + 1, 5, 6, c.color);
+        } else {
+          px(x + 1, y + 3, 4, 4, "#0d2a55");
+        }
       }
       text(c.name, sh.x + sh.w / 2, sh.y + sh.h + 3, n ? c.color : "#ff8a7a", "center");
-      if (!n && G.phase === "open" && Math.floor(t / 400) % 2) text("缺货", sh.x + sh.w / 2, sh.y + 6, "#ff8a7a", "center");
+      if (!n && G.phase === "open" && Math.floor(t / 400) % 2) text("缺货", sh.x + sh.w / 2, sh.y + 5, "#ff8a7a", "center");
     });
     // 植物装饰
     [[306, 64], [306, 120]].forEach(([x, y]) => { px(x - 4, y - 4, 8, 6, "#5b3d10"); px(x - 6, y - 14, 12, 10, "#3f7a52"); px(x - 3, y - 18, 6, 4, "#5aa070"); });
@@ -569,6 +634,12 @@ window.renderShop = function (body) {
       px(x - w / 2 - 1, y - 1, w + 2, 11, hot ? "#e8b64c" : "#000");
       px(x - w / 2, y, w, 9, "#f1e6ce");
       px(x - w / 2 + 2, y + 2, 4, 5, c.cat.color);
+      const thumb = IMG[c.item.img];
+      if (thumb && thumb.complete && thumb.naturalWidth) {
+        g.imageSmoothingEnabled = true;
+        g.drawImage(thumb, Math.round(x + w / 2 - 9), y + 1, 7, 7);
+        g.imageSmoothingEnabled = false;
+      }
       g.font = '8px "DotGothic16", monospace'; g.textAlign = "left"; g.textBaseline = "top";
       g.fillStyle = "#1f1107"; g.fillText(label, x - w / 2 + 7, y);
       if (c.st === "browse") {
@@ -630,7 +701,7 @@ window.renderShop = function (body) {
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!win || !win.classList.contains("is-min")) update(dt);
+    if (!win || !win.classList.contains("is-min")) { if (!fps) update(dt); }
     draw(now); refreshHUD();
     raf = requestAnimationFrame(loop);
   }
