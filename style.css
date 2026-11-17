@@ -275,7 +275,7 @@ a { color: var(--gold); }
 .shop__fps { position: absolute; inset: 0; display: grid; place-items: center; background: #02081a; }
 .shop__fps[hidden] { display: none; }
 .fps { position: relative; width: 100%; }
-.fps__cv { display: block; width: 100%; aspect-ratio: 320 / 224; image-rendering: pixelated; touch-action: none; cursor: grab; }
+.fps__cv { display: block; width: 100%; aspect-ratio: 320 / 224; image-rendering: auto; touch-action: none; cursor: grab; }
 .fps__cv:active { cursor: grabbing; }
 .fps__hud { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; align-items: flex-start; gap: 6px; pointer-events: none; }
 .fps__cart { background: #0b1a33e6; border: 2px solid var(--line-hi); padding: 3px 7px; font-size: 12px; white-space: nowrap; }
@@ -298,8 +298,9 @@ a { color: var(--gold); }
 .fps__brand { font-family: var(--px-en); letter-spacing: 4px; color: var(--gold); font-size: 15px; }
 .fps__note { color: var(--ink-soft); font-size: 11px; margin: 2px 0 6px; }
 .fps__items { text-align: left; margin: 6px 0; }
-.fps__item { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
+.fps__item { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
 .fps__item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fps__thumb { width: 44px; height: 44px; object-fit: contain; flex: none; background: #0a1526; border: 1px solid var(--line); }
 .fps__item b { color: var(--gold); font-weight: normal; }
 .fps__item .btn { flex: none; }
 .fps__item--total { border-bottom: 0; border-top: 2px solid var(--line-hi); margin-top: 4px; padding-top: 6px; }

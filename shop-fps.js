@@ -12,7 +12,7 @@
 window.ShopFPS = (function () {
   "use strict";
 
-  const W = 320, H = 224, HORIZON = H / 2, PLANE = 0.66; // 视野约 66°
+  const W = 640, H = 448, HORIZON = H / 2, PLANE = 0.66; // 视野约 66°
   const EYE = 0.5;                                        // 眼高（墙高 = 1）
 
   // ---------- 店面地图 ----------
@@ -70,31 +70,47 @@ window.ShopFPS = (function () {
     fr(c, 0, 0, 2, 16, "#3a2f22"); fr(c, 14, 0, 2, 16, "#3a2f22");
     fr(c, 7, 7, 2, 3, "#e8b64c"); fr(c, 0, 0, 16, 1, "#3a2f22");
   });
-  // 货架贴图：用真实商品图绘制（图加载完成后重建）
+  // 货架贴图：用真实商品图合成高清贴图（图加载完成后重建）
   const shelfSrc = {};
+  const TEX_W = 256, TEX_H = 256;
   function buildShelfTex(i) {
     const entry = shelfSrc[i];
     if (!entry) return;
     const { color, items } = entry;
-    const img = items.map((it) => it.img && IMG_CACHE[it.img]).find((im) => im && im.complete && im.naturalWidth);
-    const size = 32;
+    const imgs = items.map((it) => it.img && IMG_CACHE[it.img])
+      .filter((im) => im && im.complete && im.naturalWidth);
     const cv = document.createElement("canvas");
-    cv.width = cv.height = size;
+    cv.width = TEX_W; cv.height = TEX_H;
     const c = cv.getContext("2d");
-    fr(c, 0, 0, size, size, "#1d140d");
-    fr(c, 0, 0, size, 6, "#3a2a1c");
-    fr(c, 0, 2, size, 3, color);
-    [10, 20, 30].forEach((y) => {
-      fr(c, 2, y, size - 4, 2, "#6b5230");
-      for (let k = 0; k < 4; k++) {
-        const x = 3 + k * 7;
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = "high";
+    // 柜体
+    fr(c, 0, 0, TEX_W, TEX_H, "#1d140d");
+    fr(c, 0, 0, TEX_W, 48, "#3a2a1c");
+    fr(c, 0, 12, TEX_W, 26, color);        // 品类色带
+    fr(c, 0, 38, TEX_W, 10, "#1a120b");
+    // 三层货架板
+    const rows = [110, 186, 262];
+    rows.forEach((y, ri) => {
+      fr(c, 6, y - 6, TEX_W - 12, 6, "#6b5230");
+      fr(c, 6, y - 6, TEX_W - 12, 2, "#8f6f42");
+      const n = 4;
+      for (let k = 0; k < n; k++) {
+        const slotW = (TEX_W - 24) / n;
+        const x = 12 + k * slotW;
+        const img = imgs[(ri * n + k) % Math.max(1, imgs.length)];
         if (img) {
-          c.imageSmoothingEnabled = true;
-          c.drawImage(img, x, y - 7, 6, 7);
-        } else fr(c, x + 1, y - 5, 4, 5, k % 2 ? color : "#f1e6ce");
+          const size = Math.min(slotW - 10, 62);
+          const ar = img.naturalWidth / img.naturalHeight;
+          const w = ar >= 1 ? size : size * ar;
+          const h = ar >= 1 ? size / ar : size;
+          c.drawImage(img, x + (slotW - w) / 2, y - 8 - h, w, h);
+        } else fr(c, x + slotW / 2 - 17, y - 70, 34, 60, "#f1e6ce");
       }
     });
-    fr(c, 0, 0, 1, size, "#0d0a07"); fr(c, size - 1, 0, 1, size, "#0d0a07");
+    // 侧框
+    fr(c, 0, 0, 10, TEX_H, "#0d0a07"); fr(c, TEX_W - 10, 0, 10, TEX_H, "#0d0a07");
+    fr(c, 0, TEX_H - 8, TEX_W, 8, "#0d0a07");
     TEX[String(i + 1)] = cv;
   }
   const IMG_CACHE = {};
@@ -191,7 +207,8 @@ window.ShopFPS = (function () {
         <p class="fps__hint">WASD / 方向键移动 · 拖动鼠标转头 · E 或点一下互动</p>
       </div>`;
     const cv = root.querySelector(".fps__cv"), g = cv.getContext("2d");
-    g.imageSmoothingEnabled = false;
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = "high";
     const elN = root.querySelector('[data-k="n"]'), elSum = root.querySelector('[data-k="sum"]');
     const elList = root.querySelector('[data-k="list"]'), elAct = root.querySelector('[data-act="do"]');
     const elPanel = root.querySelector('[data-k="panel"]'), elJoy = root.querySelector('[data-k="joy"]');
@@ -224,7 +241,7 @@ window.ShopFPS = (function () {
       const rows = cat.items.map((it, i) => {
         const left = opts.stockOf(cat.id) - reserved(cat.id);
         const gone = left <= 0;
-        return `<div class="fps__item"><span>${it.name}</span><b>¥${it.price}</b>
+        return `<div class="fps__item"><img class="fps__thumb" src="${it.img}" alt=""><span>${it.name}</span><b>¥${it.price}</b>
           <button class="btn btn--sm" data-take="${i}" ${gone ? "disabled" : ""}>${gone ? "缺货" : "拿取"}</button></div>`;
       }).join("");
       elPanel.innerHTML = `<div class="fps__sheet">
@@ -360,7 +377,7 @@ window.ShopFPS = (function () {
     function flash(msg) { flashMsg = msg; flashT = 1.4; }
 
     // ---------- 每帧 ----------
-    const zbuf = new Float32Array(W / 2);
+    const zbuf = new Float32Array(W);
     function update(dt) {
       let f = 0, s = 0;
       if (keys.has("KeyW") || keys.has("ArrowUp")) f += 1;
@@ -440,7 +457,7 @@ window.ShopFPS = (function () {
       }
 
       // 墙
-      for (let col = 0; col < W; col += 2) {
+      for (let col = 0; col < W; col++) {
         const camX = (2 * col) / W - 1;
         const rx = P.dirX + planeX * camX, ry = P.dirY + planeY * camX;
         let mapX = Math.floor(P.x), mapY = Math.floor(P.y);
@@ -448,13 +465,14 @@ window.ShopFPS = (function () {
         const stepX = rx < 0 ? -1 : 1, stepY = ry < 0 ? -1 : 1;
         let sideX = rx < 0 ? (P.x - mapX) * dX : (mapX + 1 - P.x) * dX;
         let sideY = ry < 0 ? (P.y - mapY) * dY : (mapY + 1 - P.y) * dY;
-        let side = 0, hit = "#", depth = 0;        for (let i = 0; i < 64; i++) {
+        let side = 0, hit = "#", depth = 0;
+        for (let i = 0; i < 64; i++) {
           if (sideX < sideY) { sideX += dX; mapX += stepX; side = 0; } else { sideY += dY; mapY += stepY; side = 1; }
           const k = tileAt(mapX, mapY);
           if (SOLID.has(k)) { hit = k; depth = side === 0 ? sideX - dX : sideY - dY; break; }
         }
-        if (!hit || depth <= 0.01) { zbuf[col / 2] = 1e9; continue; }
-        zbuf[col / 2] = depth;
+        if (!hit || depth <= 0.01) { zbuf[col] = 1e9; continue; }
+        zbuf[col] = depth;
         const lineH = H / depth;
         const y0 = HORIZON - lineH / 2;
         let wallX = side === 0 ? P.y + depth * ry : P.x + depth * rx;
@@ -462,10 +480,10 @@ window.ShopFPS = (function () {
         const tex = TEX[hit] || TEX["#"];
         const tw = tex.width;
         const tx = Math.min(tw - 1, Math.floor(wallX * tw));
-        g.drawImage(tex, tx, 0, 1, tex.height, col, y0, 2, lineH);
+        g.drawImage(tex, tx, 0, 1, tex.height, col, y0, 1, lineH);
         const shade = Math.min(0.42, depth / 22) + (side === 1 ? 0.07 : 0);
         g.fillStyle = `rgba(2,7,18,${shade})`;
-        g.fillRect(col, y0, 2, lineH);
+        g.fillRect(col, y0, 1, lineH);
       }
 
       // 精灵
@@ -493,11 +511,11 @@ window.ShopFPS = (function () {
           const wpx = (H * s.w) / ty;
           const x0 = Math.round(cx - wpx / 2), x1 = Math.round(cx + wpx / 2);
           const srcW = s.tex.width;
-          for (let c = x0; c < x1; c += 2) {
+          for (let c = x0; c < x1; c++) {
             if (c < 0 || c >= W) continue;
-            if (ty >= zbuf[(c / 2) | 0]) continue;
+            if (ty >= zbuf[c]) continue;
             const sx = Math.floor(((c - x0) / Math.max(1, x1 - x0)) * srcW);
-            g.drawImage(s.tex, Math.min(srcW - 1, sx), 0, 1, s.tex.height, c, top, 2, bot - top);
+            g.drawImage(s.tex, Math.min(srcW - 1, sx), 0, 1, s.tex.height, c, top, 1, bot - top);
           }
           // 距离变暗
           if (ty > 4) {
@@ -518,7 +536,7 @@ window.ShopFPS = (function () {
           const tx = inv * (P.dirY * rx - P.dirX * ry);
           const sx = (W / 2) * (1 + tx / ty);
           const sy = HORIZON + (H * (EYE - bz)) / ty;
-          if (Math.floor(sx / 2) >= 0 && Math.floor(sx / 2) < zbuf.length && ty < zbuf[Math.floor(sx / 2)])
+          if (sx >= 0 && sx < W && ty < zbuf[sx | 0])
             g.fillStyle = "#ffffff"; g.fillRect(sx | 0, sy | 0, 2, 2);
         }
       }
